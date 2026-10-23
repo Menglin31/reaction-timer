@@ -4,14 +4,14 @@
 
 ## 用法
 
-打開 https://menglin31.github.io/reaction-timer/ ，設定後按「開始」。
+打開 https://menglin31.github.io/reaction-timer/ ，設定後按「Start」。
 
 | 設定 | 說明 |
 |---|---|
-| 順序 | 固定順序（↑ → ↓ ← 循環）或隨機 |
-| 間隔（秒） | 每個箭頭出現的間隔，最短 1 秒 |
-| 每組時間（秒） | 0 = 不限時間 |
-| 開始前倒數（秒） | 預留站好位置的時間 |
+| Order | Fixed（↑ → ↓ ← 循環）或 Random |
+| Interval (sec) | 每個箭頭出現的間隔，最短 1 秒 |
+| Set duration (sec) | 0 = 不限時間 |
+| Countdown before start (sec) | 預留站好位置的時間 |
 
 執行中點螢幕即停止；練習時會保持螢幕常亮（需要瀏覽器支援 Wake Lock）。
 
