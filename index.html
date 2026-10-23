@@ -43,7 +43,15 @@
       <button data-mode="fixed" class="on">Fixed</button>
       <button data-mode="random">Random</button>
     </div>
-    <div class="hint">Fixed: ↑ → ↓ ← repeating</div>
+    <div class="hint" id="orderHint">Fixed: ↑ → ↓ ← repeating</div>
+  </div>
+
+  <div class="row">
+    <label>Directions</label>
+    <div class="seg" id="dirSeg">
+      <button data-dirs="4" class="on">4</button>
+      <button data-dirs="8">8</button>
+    </div>
   </div>
 
   <div class="row">
@@ -79,7 +87,11 @@
 </div>
 
 <script>
-const ORDER = [0, 90, 180, 270];  // up, right, down, left (rotation degrees)
+const ORDERS = {                  // clockwise from up (rotation degrees)
+  4: [0, 90, 180, 270],
+  8: [0, 45, 90, 135, 180, 225, 270, 315],
+};
+const HINTS = { 4: 'Fixed: ↑ → ↓ ← repeating', 8: 'Fixed: ↑ ↗ → ↘ ↓ ↙ ← ↖ repeating' };
 const GAP_MS = 250;               // brief blank before each arrow so a repeated direction is visible as a new cue
 
 let mode = 'fixed';
@@ -87,6 +99,15 @@ document.querySelectorAll('#modeSeg button').forEach(b => {
   b.onclick = () => {
     mode = b.dataset.mode;
     document.querySelectorAll('#modeSeg button').forEach(x => x.classList.toggle('on', x === b));
+  };
+});
+
+let dirs = 4;
+document.querySelectorAll('#dirSeg button').forEach(b => {
+  b.onclick = () => {
+    dirs = +b.dataset.dirs;
+    document.querySelectorAll('#dirSeg button').forEach(x => x.classList.toggle('on', x === b));
+    $('orderHint').textContent = HINTS[dirs];
   };
 });
 
@@ -128,7 +149,8 @@ function beginCues(interval, duration) {
   }
 
   const next = () => {
-    const angle = mode === 'fixed' ? ORDER[n % 4] : ORDER[Math.floor(Math.random() * 4)];
+    const order = ORDERS[dirs];
+    const angle = mode === 'fixed' ? order[n % order.length] : order[Math.floor(Math.random() * order.length)];
     n++;
     show(null);
     later(() => {

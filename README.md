@@ -1,6 +1,6 @@
 # reaction-timer
 
-A direction arrow timer for reaction drills: shows ↑ → ↓ ← arrows full-screen in fixed or random order, for directional reaction exercises such as the star excursion.
+A direction arrow timer for reaction drills: shows arrows in 4 or 8 directions full-screen in fixed or random order, for directional reaction exercises such as the star excursion.
 
 ## Usage
 
@@ -9,6 +9,7 @@ Open https://menglin31.github.io/reaction-timer/ , adjust the settings, and tap 
 | Setting | Description |
 |---|---|
 | Order | Fixed (↑ → ↓ ← repeating) or Random |
+| Directions | 4 (↑ → ↓ ←) or 8 (adds diagonals; fixed order goes clockwise ↑ ↗ → ↘ ↓ ↙ ← ↖) |
 | Interval (sec) | Time between arrows, minimum 1 second |
 | Set duration (sec) | 0 = no limit |
 | Countdown before start (sec) | Time to get into position |
