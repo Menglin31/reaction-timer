@@ -1,26 +1,26 @@
 # reaction-timer
 
-反應訓練用的方向箭頭計時器：全螢幕依序或隨機顯示 ↑ → ↓ ← 箭頭，適合搭配星狀伸展這類方向反應練習。
+A direction arrow timer for reaction drills: shows ↑ → ↓ ← arrows full-screen in fixed or random order, for directional reaction exercises such as the star excursion.
 
-## 用法
+## Usage
 
-打開 https://menglin31.github.io/reaction-timer/ ，設定後按「Start」。
+Open https://menglin31.github.io/reaction-timer/ , adjust the settings, and tap "Start".
 
-| 設定 | 說明 |
+| Setting | Description |
 |---|---|
-| Order | Fixed（↑ → ↓ ← 循環）或 Random |
-| Interval (sec) | 每個箭頭出現的間隔，最短 1 秒 |
-| Set duration (sec) | 0 = 不限時間 |
-| Countdown before start (sec) | 預留站好位置的時間 |
+| Order | Fixed (↑ → ↓ ← repeating) or Random |
+| Interval (sec) | Time between arrows, minimum 1 second |
+| Set duration (sec) | 0 = no limit |
+| Countdown before start (sec) | Time to get into position |
 
-執行中點螢幕即停止；練習時會保持螢幕常亮（需要瀏覽器支援 Wake Lock）。
+Tap the screen to stop while running. The screen stays awake during a set (requires browser support for the Wake Lock API).
 
-## 檔案
+## Files
 
-| 檔案 | 說明 |
+| File | Description |
 |---|---|
-| `index.html` | 整個網頁（HTML + JavaScript），沒有其他依賴 |
+| `index.html` | The entire page (HTML + JavaScript), no dependencies |
 
-## 部署
+## Deployment
 
-GitHub Pages：Settings → Pages → Source 選 `Deploy from a branch`，Branch 選 `main`、`/ (root)`。
+GitHub Pages: Settings → Pages → Source: `Deploy from a branch`, Branch: `main`, `/ (root)`.
