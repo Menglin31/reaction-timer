@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>反應版星狀伸展</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: #000; color: #fff;
+    font-family: -apple-system, "PingFang TC", sans-serif; -webkit-user-select: none; user-select: none; }
+  #setup { padding: 24px; max-width: 480px; margin: 0 auto; }
+  h1 { font-size: 24px; margin: 8px 0 24px; }
+  .row { margin-bottom: 22px; }
+  .row label { display: block; font-size: 17px; margin-bottom: 8px; color: #ccc; }
+  .seg { display: flex; gap: 8px; }
+  .seg button { flex: 1; padding: 14px; font-size: 18px; border-radius: 10px;
+    border: 2px solid #555; background: #111; color: #fff; }
+  .seg button.on { border-color: #4da3ff; background: #12345a; }
+  input[type=number] { width: 100%; padding: 14px; font-size: 22px; border-radius: 10px;
+    border: 2px solid #555; background: #111; color: #fff; }
+  .hint { font-size: 14px; color: #888; margin-top: 6px; }
+  #startBtn { width: 100%; padding: 20px; font-size: 24px; border: 0; border-radius: 12px;
+    background: #2e8b57; color: #fff; margin-top: 8px; }
+  #run { display: none; position: fixed; inset: 0; }
+  #status { position: absolute; top: env(safe-area-inset-top, 0); left: 0; right: 0;
+    padding: 16px; display: flex; justify-content: space-between; font-size: 20px; color: #888; }
+  #stage { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+  #arrow { width: 75vmin; height: 75vmin; display: none; }
+  #big { font-size: 40vmin; font-weight: 700; display: none; }
+  #msg { font-size: 9vmin; display: none; text-align: center; }
+  #foot { position: absolute; bottom: 24px; left: 0; right: 0; text-align: center; color: #555; font-size: 15px; }
+</style>
+</head>
+<body>
+
+<div id="setup">
+  <h1>反應版星狀伸展</h1>
+
+  <div class="row">
+    <label>順序</label>
+    <div class="seg" id="modeSeg">
+      <button data-mode="fixed" class="on">固定順序</button>
+      <button data-mode="random">隨機</button>
+    </div>
+    <div class="hint">固定順序：↑ → ↓ ← 循環</div>
+  </div>
+
+  <div class="row">
+    <label>間隔（秒）</label>
+    <input type="number" id="interval" value="4" min="1" step="0.5" inputmode="decimal">
+  </div>
+
+  <div class="row">
+    <label>每組時間（秒）</label>
+    <input type="number" id="duration" value="60" min="0" step="5" inputmode="numeric">
+    <div class="hint">0 = 不限時間，點螢幕結束</div>
+  </div>
+
+  <div class="row">
+    <label>開始前倒數（秒）</label>
+    <input type="number" id="countdown" value="5" min="0" step="1" inputmode="numeric">
+    <div class="hint">讓你有時間站好位置</div>
+  </div>
+
+  <button id="startBtn">開始</button>
+</div>
+
+<div id="run">
+  <div id="status"><span id="left"></span><span id="count"></span></div>
+  <div id="stage">
+    <svg id="arrow" viewBox="0 0 100 100">
+      <polygon points="50,6 92,50 64,50 64,94 36,94 36,50 8,50" fill="#fff"/>
+    </svg>
+    <div id="big"></div>
+    <div id="msg"></div>
+  </div>
+  <div id="foot">點螢幕停止</div>
+</div>
+
+<script>
+const ORDER = [0, 90, 180, 270];  // 上、右、下、左（旋轉角度）
+const GAP_MS = 250;               // 換箭頭前先空白一下，連續同方向才看得出是新指令
+
+let mode = 'fixed';
+document.querySelectorAll('#modeSeg button').forEach(b => {
+  b.onclick = () => {
+    mode = b.dataset.mode;
+    document.querySelectorAll('#modeSeg button').forEach(x => x.classList.toggle('on', x === b));
+  };
+});
+
+const $ = id => document.getElementById(id);
+let timers = [], tick = null, wakeLock = null, running = false, finished = false;
+
+function show(el) { ['arrow', 'big', 'msg'].forEach(id => $(id).style.display = id === el ? 'block' : 'none'); }
+function later(fn, ms) { timers.push(setTimeout(fn, ms)); }
+
+async function keepAwake() {
+  try { if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen'); } catch (e) {}
+}
+
+function start() {
+  const interval = Math.max(1, parseFloat($('interval').value) || 4) * 1000;
+  const duration = Math.max(0, parseFloat($('duration').value) || 0) * 1000;
+  const countdown = Math.max(0, parseInt($('countdown').value) || 0);
+
+  $('setup').style.display = 'none';
+  $('run').style.display = 'block';
+  $('left').textContent = ''; $('count').textContent = '';
+  running = true; finished = false;
+  keepAwake();
+
+  for (let i = 0; i < countdown; i++) {
+    later(() => { show('big'); $('big').textContent = countdown - i; }, i * 1000);
+  }
+  later(() => beginCues(interval, duration), countdown * 1000);
+}
+
+function beginCues(interval, duration) {
+  const t0 = Date.now();
+  let n = 0;
+
+  if (duration > 0) {
+    const upd = () => { $('left').textContent = '剩 ' + Math.max(0, Math.ceil((duration - (Date.now() - t0)) / 1000)) + ' 秒'; };
+    upd(); tick = setInterval(upd, 250);
+    later(finish, duration);
+  }
+
+  const next = () => {
+    const angle = mode === 'fixed' ? ORDER[n % 4] : ORDER[Math.floor(Math.random() * 4)];
+    n++;
+    show(null);
+    later(() => {
+      $('arrow').style.transform = 'rotate(' + angle + 'deg)';
+      show('arrow');
+      $('count').textContent = '第 ' + n + ' 次';
+    }, GAP_MS);
+    // 以起始時間排程，避免累積誤差
+    later(next, t0 + n * interval - Date.now());
+  };
+  next();
+}
+
+function finish() {
+  clearAll();
+  finished = true;
+  show('msg');
+  $('msg').textContent = '完成\n點螢幕回設定';
+  $('msg').style.whiteSpace = 'pre-line';
+}
+
+function clearAll() {
+  timers.forEach(clearTimeout); timers = [];
+  if (tick) { clearInterval(tick); tick = null; }
+  running = false;
+}
+
+function backToSetup() {
+  clearAll();
+  if (wakeLock) { wakeLock.release().catch(() => {}); wakeLock = null; }
+  $('run').style.display = 'none';
+  $('setup').style.display = 'block';
+}
+
+$('startBtn').onclick = start;
+$('run').onclick = () => { if (running) { clearAll(); finish(); } else if (finished) backToSetup(); };
+
+// 從背景切回來時重新要求螢幕常亮
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && running) keepAwake();
+});
+</script>
+</body>
+</html>
